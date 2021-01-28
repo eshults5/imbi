@@ -29,9 +29,14 @@ CREATE OR REPLACE FUNCTION insert_project_fact_history() RETURNS trigger
        AND project_type = fact_project_type;
 
     IF (TG_OP = 'INSERT') THEN
-        SELECT NEW.created_by INTO fact_recorded_by;
+        SELECT NEW.created_by 
+          INTO fact_recorded_by;
     ELSIF (TG_OP = 'UPDATE') THEN
-        SELECT NEW.last_modified_by INTO fact_recorded_by;
+        SELECT CASE NEW.last_modified_by 
+               WHEN NULL THEN NEW.created_by
+               ELSE NEW.last_modified_by
+                END
+          INTO fact_recorded_by;
     END IF;     
 
     INSERT INTO project_fact_history(namespace, "name", fact_type, recorded_by, value, score, weight)
